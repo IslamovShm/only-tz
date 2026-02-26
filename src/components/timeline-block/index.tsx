@@ -1,152 +1,128 @@
-import { CSSProperties, useCallback } from "react";
-import { TIMELINE_DATA } from "../data/timelineData";
-import { useCircleRotation } from "../hooks/useCircleRotation";
-import { useSwiper } from "../hooks/useSwiper";
-import { TimelineCircle } from "./TimelineCircle";
-import { TimelineSlider } from "./TimelineSlider";
+import { useCallback, useEffect, useMemo } from "react";
 import { useState } from "react";
+import type { Swiper as SwiperType } from "swiper";
+import { useCircleRotation } from "../../hooks/useCircleRotation";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { MOBILE_BREAKPOINT } from "../../constants/timeline";
+import { TimelineCircle } from "../timeline-circle";
+import { TimelineSlider } from "../timeline-slider";
+import { YearCounter } from "../YearCounter";
+import { TimelineControls } from "../timeline-controls";
+import { TimelineMobileControls } from "../timeline-mobile-controls";
+import { TIMELINE_DATA } from "../../data/timelineData";
+
+import * as S from "./styles";
 
 export default function TimelineBlock() {
   const data = TIMELINE_DATA;
-  const [activeCategory, setActiveCategory] = useState<number>(6);
+  const isMobile = useMediaQuery(MOBILE_BREAKPOINT);
+  const totalSteps = data.length;
+  const [activeCategory, setActiveCategory] = useState<number>(1);
+
+  const [swiper, setSwiper] = useState<SwiperType | null>(null);
+  const [activePage, setActivePage] = useState(0);
+  const [pagesCount, setPagesCount] = useState(0);
 
   const { rotation, rotateTo } = useCircleRotation(data);
-  const swiper = useSwiper();
 
-  const activeItem = data.find((item) => item.id === activeCategory)!;
+  const { activeItem, activeIndex } = useMemo(() => {
+    const idx = data.findIndex((item) => item.id === activeCategory);
+    return {
+      activeItem: data[idx]!,
+      activeIndex: idx + 1,
+    };
+  }, [data, activeCategory]);
 
   const handleSelect = useCallback(
     (id: number) => {
       setActiveCategory(id);
       rotateTo(id);
-      swiper.reset();
     },
-    [rotateTo, swiper],
+    [rotateTo],
   );
 
+  const handleNext = useCallback(() => {
+    const currentIndex = data.findIndex((item) => item.id === activeCategory);
+    const nextIndex = (currentIndex + 1) % totalSteps;
+    handleSelect(data[nextIndex].id);
+  }, [activeCategory, data, handleSelect, totalSteps]);
+
+  const handlePrev = useCallback(() => {
+    const currentIndex = data.findIndex((item) => item.id === activeCategory);
+    const prevIndex = (currentIndex - 1 + totalSteps) % totalSteps;
+    handleSelect(data[prevIndex].id);
+  }, [activeCategory, data, handleSelect, totalSteps]);
+
+  useEffect(() => {
+    rotateTo(activeCategory);
+  }, [activeCategory, rotateTo]);
+
   return (
-    <section style={styles.timelineSection}>
-      <div style={styles.container}>
-        <div style={styles.vLine} aria-hidden />
-        <div style={styles.hLine} aria-hidden />
+    <section style={{ padding: "0px 20px", overflow: "hidden" }}>
+      <S.Container>
+        <S.V_LINE aria-hidden />
 
-        <div style={styles.titleBlock}>
-          <div style={styles.titleAccent} aria-hidden />
-          <h1 style={styles.title}>
+        <S.TitleBlock>
+          <S.TitleAccent aria-hidden />
+          <S.Title>
             Исторические <br /> даты
-          </h1>
-        </div>
+          </S.Title>
+        </S.TitleBlock>
 
-        <div style={styles.years} aria-live="polite">
-          <span style={styles.blue}>{activeItem.startYear}</span>
-          <span style={styles.pink}>{activeItem.endYear}</span>
-        </div>
+        <S.YearsContainer>
+          <S.Years>
+            <S.Blue>
+              <YearCounter value={activeItem.startYear} />
+            </S.Blue>
+            <S.Pink>
+              <YearCounter value={activeItem.endYear} />
+            </S.Pink>
+          </S.Years>
 
-        <TimelineCircle
-          data={data}
-          activeId={activeCategory}
-          rotation={rotation}
-          onSelect={handleSelect}
-        />
+          <S.H_LINE aria-hidden />
 
-        <TimelineSlider
-          events={activeItem.events}
-          categoryId={activeCategory}
-          currentSlide={swiper.currentSlide}
-          totalPages={swiper.totalPages}
-          isBeginning={swiper.isBeginning}
-          isEnd={swiper.isEnd}
-          onSwiper={swiper.onSwiper}
-          onSlideChange={swiper.onSlideChange}
-          onPrev={swiper.slidePrev}
-          onNext={swiper.slideNext}
-        />
-      </div>
+          <S.CircleWrapper>
+            <TimelineCircle
+              data={data}
+              activeId={activeCategory}
+              rotation={rotation}
+              onSelect={handleSelect}
+            />
+          </S.CircleWrapper>
+        </S.YearsContainer>
+
+        <S.EventsBlock>
+          {!isMobile && (
+            <TimelineControls
+              current={activeIndex}
+              total={totalSteps}
+              onNext={handleNext}
+              onPrev={handlePrev}
+            />
+          )}
+
+          <TimelineSlider
+            events={activeItem.events}
+            categoryId={activeCategory}
+            setActivePage={setActivePage}
+            setPagesCount={setPagesCount}
+            setSwiper={setSwiper}
+          />
+
+          {isMobile && (
+            <TimelineMobileControls
+              current={activeIndex}
+              total={totalSteps}
+              onNext={handleNext}
+              onPrev={handlePrev}
+              events={activeItem.events}
+              swiper={swiper}
+              activePage={activePage}
+              pagesCount={pagesCount}
+            />
+          )}
+        </S.EventsBlock>
+      </S.Container>
     </section>
   );
 }
-
-const styles: Record<string, CSSProperties> = {
-  timelineSection: {
-    width: "100%",
-    position: "relative",
-    overflow: "hidden",
-  },
-
-  container: {
-    position: "relative",
-    maxWidth: "1440px",
-    width: "100%",
-    minHeight: "100vh",
-    margin: "0 auto",
-    padding: "130px 80px 0",
-    borderLeft: "1px solid rgba(66, 86, 122, 0.2)",
-    borderRight: "1px solid rgba(66, 86, 122, 0.2)",
-  },
-
-  vLine: {
-    position: "absolute",
-    left: "50%",
-    top: 0,
-    bottom: 0,
-    width: "1px",
-    backgroundColor: "#42567A",
-    opacity: 0.2,
-    transform: "translateX(-50%)",
-  },
-
-  hLine: {
-    position: "absolute",
-    top: "43%",
-    left: 0,
-    right: 0,
-    height: "1px",
-    backgroundColor: "#42567A",
-    opacity: 0.2,
-    transform: "translateY(-50%)",
-  },
-
-  titleBlock: {
-    position: "relative",
-    zIndex: 10,
-    width: "fit-content",
-  },
-
-  titleAccent: {
-    position: "absolute",
-    left: "-80px",
-    top: "4px",
-    width: "5px",
-    bottom: 0,
-    background: "linear-gradient(180deg, #3877EE 0%, #EF5DA8 100%)",
-    borderRadius: "2px",
-  },
-
-  title: {
-    fontSize: "56px",
-    fontWeight: "700",
-    color: "#42567A",
-    lineHeight: 1.1,
-    marginBottom: "40px",
-  },
-
-  years: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "30px",
-    marginBottom: "137px",
-  },
-
-  blue: {
-    color: "#5D5FEF",
-    fontWeight: "700",
-    fontSize: "200px",
-  },
-
-  pink: {
-    color: "#EF5DA8",
-    fontWeight: "700",
-    fontSize: "200px",
-  },
-};

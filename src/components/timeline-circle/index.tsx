@@ -1,7 +1,9 @@
 import { CSSProperties, useState } from "react";
-import type { TimelinePeriod } from "../types/timeline";
-import { TimelinePoint } from "./TimelinePoint";
-import { CIRCLE } from "../constants/timeline";
+import type { TimelinePeriod } from "../../types/timeline";
+import { TimelinePoint } from "../timeline-point";
+import { CIRCLE } from "../../constants/timeline";
+
+import * as S from "./styles";
 
 interface TimelineCircleProps {
   data: TimelinePeriod[];
@@ -19,10 +21,9 @@ export const TimelineCircle = ({
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
-    <div style={styles.circleBlock}>
-      <div
+    <S.CircleBlock>
+      <S.Circle
         style={{
-          ...styles.circle,
           transform: `rotate(${rotation}deg)`,
           transition: "transform 1s ease",
         }}
@@ -36,6 +37,7 @@ export const TimelineCircle = ({
             <TimelinePoint
               key={item.id}
               id={item.id}
+              number={index + 1}
               x={x}
               y={y}
               rotation={rotation}
@@ -47,25 +49,7 @@ export const TimelineCircle = ({
             />
           );
         })}
-      </div>
-    </div>
+      </S.Circle>
+    </S.CircleBlock>
   );
-};
-
-const styles: Record<string, CSSProperties> = {
-  circleBlock: {
-    position: "absolute",
-    left: "50%",
-    top: "43%",
-    transform: "translate(-50%, -50%)",
-    zIndex: 100,
-  },
-
-  circle: {
-    position: "relative",
-    width: `${CIRCLE.SIZE}px`,
-    height: `${CIRCLE.SIZE}px`,
-    border: "1px solid rgba(66, 86, 122, 0.2)",
-    borderRadius: "50%",
-  },
 };

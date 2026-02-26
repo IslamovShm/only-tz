@@ -1,9 +1,12 @@
-import TimelineBlock from "./components/TimelineBlock"
+import TimelineBlock from "./components/timeline-block"
+
 
 const App = () => {
 
   return (
-    <TimelineBlock />
+    <>
+      <TimelineBlock />
+    </>
   )
 }
 
