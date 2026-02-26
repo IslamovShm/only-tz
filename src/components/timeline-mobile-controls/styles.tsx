@@ -24,5 +24,5 @@ export const SliderDots = styled.button<{ $isActive: boolean }>`
   border: none;
   background: #42567a;
   opacity: ${(props) => (props.$isActive ? 1 : 0.4)};
-  transition: "background 0.3s ease";
+  transition: background 0.3s ease;
 `;

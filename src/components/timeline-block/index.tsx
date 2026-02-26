@@ -115,7 +115,6 @@ export default function TimelineBlock() {
               total={totalSteps}
               onNext={handleNext}
               onPrev={handlePrev}
-              events={activeItem.events}
               swiper={swiper}
               activePage={activePage}
               pagesCount={pagesCount}

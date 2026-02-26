@@ -1,4 +1,3 @@
-import { IoChevronBackOutline, IoChevronForward } from "react-icons/io5";
 import type { Swiper as SwiperType } from "swiper";
 import type { TimelineEvent } from "../../types/timeline";
 
@@ -10,7 +9,6 @@ interface Props {
   total: number;
   onNext: () => void;
   onPrev: () => void;
-  events: TimelineEvent[];
   swiper: SwiperType | null;
   activePage: number;
   pagesCount: number;
@@ -21,12 +19,10 @@ export const TimelineMobileControls = ({
   total,
   onNext,
   onPrev,
-  events,
   swiper,
   activePage,
   pagesCount,
 }: Props) => {
-  const formatNum = (n: number) => n.toString().padStart(2, "0");
   return (
     <S.TimelineMobileControls>
       <TimelineControls
